@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+requests
+lxml
+aiosqlite
+sqlalchemy
+psycopg2-binary
+cryptography
+pydantic
+httpx
+python-dotenv
+pytest
+pytest-asyncio
+sentence-transformers
