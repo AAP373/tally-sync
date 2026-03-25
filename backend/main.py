@@ -75,10 +75,11 @@ async def agent_sync(body: SyncPayload):
         stored = store_normalized(_engine, sync_id, normalized)
         logger.info("Stored %d vouchers sync_id=%s", stored, sync_id)
     except Exception as e:
-        logger.exception("Storage failed: %s", e)
-        raise HTTPException(status_code=500, detail="Storage failed")
-
-    return {"status": "OK", "stored": stored}
+        logger.error("Decryption failed: %s", e)
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail="Invalid payload")  
+        return {"status": "OK", "stored": stored}
 
 @app.post("/v1/sync/heartbeat")
 async def heartbeat(body: HeartbeatPayload):
