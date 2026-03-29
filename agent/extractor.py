@@ -55,22 +55,29 @@ def extract_vouchers(raw_vouchers: Iterable[dict]) -> List[Voucher]:
     """
     vouchers: List[Voucher] = []
     for raw in raw_vouchers:
-        # Tally shapes vary: sometimes Amount is per ledger entry, sometimes only in entries list.
-        amount = _first_present(raw, ("amount", "Amount"), None)
-        if amount is None:
-            entries = raw.get("LedgerEntries") or raw.get("ledger_entries") or []
-            if isinstance(entries, list) and entries:
-                entry_amt = entries[0].get("Amount") if isinstance(entries[0], dict) else None
-                amount = entry_amt if entry_amt is not None else 0.0
-            else:
-                amount = 0.0
+        # Extract ledger entries from parsed dictionary (not XML)
+        ledger_entries = raw.get("LedgerEntries", [])
+        
+        # Handle both single entry and list of entries
+        if isinstance(ledger_entries, dict):
+            ledger_entries = [ledger_entries]
+        
+        # Map to expected format
+        normalized_entries = []
+        for entry in ledger_entries:
+            if isinstance(entry, dict):
+                normalized_entries.append({
+                    "ledger_name": entry.get("LedgerName", ""),
+                    "amount": entry.get("Amount", 0),
+                })
+        
         voucher = Voucher(
-            external_id=str(_first_present(raw, ("external_id", "id", "guid", "GUID"), "")),
-            voucher_type=str(_first_present(raw, ("voucher_type", "type", "VoucherType", "VOUCHERTYPE"), "")),
-            date=str(_first_present(raw, ("date", "Date", "DATE"), "")),
-            amount=float(amount or 0.0),
-            ledger_name=str(_first_present(raw, ("ledger_name", "LedgerName", "LEDGERNAME"), "")),
-            narration=str(_first_present(raw, ("narration", "Narration", "NARRATION"), "")),
+            external_id=str(_first_present(raw, ("GUID", "external_id"), "")),
+            voucher_type=str(_first_present(raw, ("VoucherType", "voucher_type"), "")),
+            date=str(_first_present(raw, ("Date", "date"), "")),
+            amount=float(sum(entry.get("Amount", 0) for entry in normalized_entries)),
+            narration=str(_first_present(raw, ("Narration", "narration"), "")),
+            ledger_entries=normalized_entries,
         )
         vouchers.append(voucher)
     return vouchers

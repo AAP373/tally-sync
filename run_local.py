@@ -6,10 +6,13 @@ import multiprocessing
 import sys
 sys.path.insert(0, ".")
 from tests.mock_tally_server import run as run_tally
-# Set shared key for both processes
-KEY = "GG7ZWHj6oCr6TVyktnMFnMI7JBv_4hNEDqTttcWDZ-o="
-os.environ["AGENT_FERNET_KEY"] = KEY
+from dotenv import load_dotenv
 
+load_dotenv()
+KEY = os.environ.get("AGENT_FERNET_KEY")
+if not KEY:
+    raise ValueError("CRITICAL: AGENT_FERNET_KEY not found in .env file!")
+    
 def start_tally():
     run_tally(port=9000)
 

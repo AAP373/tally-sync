@@ -19,8 +19,8 @@ class Voucher:
     voucher_type: str
     date: str
     amount: float
-    ledger_name: str = ""
     narration: str = ""
+    ledger_entries: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
